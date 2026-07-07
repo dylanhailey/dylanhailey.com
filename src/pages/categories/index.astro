@@ -1,0 +1,59 @@
+---
+import { getCollection } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import { CATEGORIES, CATEGORY_META } from "@/data/categories";
+import { postFilter } from "@/utils/postFilter";
+import config from "@/config";
+
+const locale = Astro.currentLocale ?? config.site.lang;
+
+const posts = await getCollection("posts");
+const visiblePosts = posts.filter(postFilter);
+const counts = Object.fromEntries(
+  CATEGORIES.map(category => [
+    category,
+    visiblePosts.filter(post => post.data.category === category).length,
+  ])
+);
+---
+
+<Layout
+  title={`Categories | ${config.site.title}`}
+  description="Browse posts by topic."
+>
+  <Header />
+
+  <Breadcrumb />
+
+  <Main pageTitle="Categories" pageDesc="Browse posts by topic.">
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {
+        CATEGORIES.map(category => (
+          <li class="border-border bg-muted/30 hover:border-accent/60 rounded-lg border p-5 transition-colors">
+            <a
+              href={getRelativeLocaleUrl(locale, `categories/${category}`)}
+              class:list={[
+                "text-accent inline-block text-lg font-medium",
+                "decoration-dashed underline-offset-4 hover:underline",
+                "focus-visible:no-underline focus-visible:underline-offset-0",
+              ]}
+            >
+              <h2>{CATEGORY_META[category].label}</h2>
+            </a>
+            <p class="mt-2 text-sm">{CATEGORY_META[category].description}</p>
+            <p class="text-muted-foreground mt-4 text-sm">
+              {counts[category]} {counts[category] === 1 ? "post" : "posts"}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </Main>
+
+  <Footer />
+</Layout>

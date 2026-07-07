@@ -1,0 +1,51 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import { getPostUrl } from "@/utils/getPostPaths";
+import { toTransitionName } from "@/utils/toTransitionName";
+import { CATEGORY_META } from "@/data/categories";
+import config from "@/config";
+import Datetime from "./Datetime.astro";
+
+type Props = {
+  variant?: "h2" | "h3";
+} & CollectionEntry<"posts">;
+
+const { variant: Heading = "h2", id, data, filePath } = Astro.props;
+
+const { title, description, category, ...props } = data;
+
+const locale = Astro.currentLocale ?? config.site.lang;
+const meta = CATEGORY_META[category];
+---
+
+<li
+  class="border-border bg-muted/30 hover:border-accent/60 my-4 rounded-lg border p-5 transition-colors"
+>
+  <a
+    href={getPostUrl(id, filePath, Astro.currentLocale)}
+    class:list={[
+      "text-accent inline-block text-lg font-medium",
+      "decoration-dashed underline-offset-4 hover:underline",
+      "focus-visible:no-underline focus-visible:underline-offset-0",
+    ]}
+  >
+    <Heading transition:name={toTransitionName(title)}>
+      {title}
+    </Heading>
+  </a>
+  <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+    <Datetime {...props} />
+    <a
+      href={getRelativeLocaleUrl(locale, `categories/${category}`)}
+      class:list={[
+        "rounded-full border px-2.5 py-0.5 text-xs font-medium",
+        "hover:brightness-110 focus-visible:outline-2",
+        meta.chip,
+      ]}
+    >
+      {meta.label}
+    </a>
+  </div>
+  <p class="mt-2">{description}</p>
+</li>

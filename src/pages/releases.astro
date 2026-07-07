@@ -1,0 +1,102 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Breadcrumb from "@/components/Breadcrumb.astro";
+import Main from "@/components/Main.astro";
+import Footer from "@/components/Footer.astro";
+import config from "@/config";
+import { repos } from "@/data/repos";
+
+interface RepoInfo {
+  name: string;
+  url: string;
+  blurb: string;
+  language: string | null;
+}
+
+// Fetched once at build time — the deployed page is fully static.
+// If the GitHub API is unavailable (rate limit, repo not yet public),
+// the card still renders from the local data with the language omitted.
+const repoCards: RepoInfo[] = await Promise.all(
+  repos.map(async ({ repo, blurb }): Promise<RepoInfo> => {
+    const fallback: RepoInfo = {
+      name: repo.split("/")[1],
+      url: `https://github.com/${repo}`,
+      blurb,
+      language: null,
+    };
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repo}`, {
+        headers: { Accept: "application/vnd.github+json" },
+      });
+      if (!res.ok) {
+        console.warn(`[releases] GitHub API ${res.status} for ${repo}`);
+        return fallback;
+      }
+      const data = await res.json();
+      return {
+        ...fallback,
+        url: data.html_url ?? fallback.url,
+        language: data.language ?? null,
+      };
+    } catch (err) {
+      console.warn(`[releases] fetch failed for ${repo}:`, err);
+      return fallback;
+    }
+  })
+);
+---
+
+<Layout
+  title={`Releases | ${config.site.title}`}
+  description="Open-source projects and tools I've released."
+>
+  <Header />
+
+  <Breadcrumb />
+
+  <Main
+    pageTitle="Releases"
+    pageDesc="Open-source projects and tools I've released."
+  >
+    {
+      repoCards.length === 0 && (
+        <p class="text-muted-foreground">
+          Nothing published yet. Releases will show up here soon.
+        </p>
+      )
+    }
+    <ul class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {
+        repoCards.map(repo => (
+          <li class="border-border bg-muted/30 hover:border-accent/60 rounded-lg border p-5 transition-colors">
+            <a
+              href={repo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class:list={[
+                "text-accent inline-block text-lg font-medium",
+                "decoration-dashed underline-offset-4 hover:underline",
+                "focus-visible:no-underline focus-visible:underline-offset-0",
+              ]}
+            >
+              <h2>{repo.name}</h2>
+            </a>
+            <p class="mt-2 text-sm">{repo.blurb}</p>
+            {repo.language && (
+              <p class="text-muted-foreground mt-4 flex items-center gap-1.5 text-sm">
+                <span
+                  class="bg-accent inline-block size-2.5 rounded-full"
+                  aria-hidden="true"
+                />
+                {repo.language}
+              </p>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+  </Main>
+
+  <Footer />
+</Layout>
