@@ -31,8 +31,8 @@ export default defineAstroPaperConfig({
   socials: [
     { name: "github",    url: "https://github.com/dylanhailey" },
     { name: "linkedin",  url: "https://www.linkedin.com/in/dylanhailey/" },
-    { name: "instagram", url: "https://www.instagram.com/tibitximer" },
-    { name: "x",         url: "https://x.com/tibitximer" },
+    { name: "instagram", url: "https://www.instagram.com/dylanshailey" },
+    { name: "x",         url: "https://x.com/dylanshailey" },
     { name: "mail",      url: "mailto:contact@dylanhailey.com" },
   ],
   shareLinks: [
